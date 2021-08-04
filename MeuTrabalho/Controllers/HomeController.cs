@@ -5,15 +5,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using MeuTrabalho.Models;
-using System.Data.SqlClient;
 using MeuTrabalho.Repositories;
 
 namespace MeuTrabalho.Controllers
 {
-    public class HomeController : Controller, IDisposable
+    public class HomeController : Controller
     {
-        public HomeController()
+        readonly ILogRepository logRepository;
+
+        public HomeController(ILogRepository logRepository)
         {
+            this.logRepository = logRepository;
         }
 
         public IActionResult Index()
@@ -34,39 +36,25 @@ namespace MeuTrabalho.Controllers
 
         public IActionResult About([FromQuery]string teste = "")
         {
-            using (SqlConnection connection = new SqlConnection("Server=martedb.database.windows.net;Database=sql7;User=app;Connection Timeout=3;Password=homework-ago21;Max Pool Size=2"))
+            if (teste == "")
             {
-                LogRepository logRepository = new LogRepository("Server=martedb.database.windows.net;Database=sql7;User=app;Connection Timeout=3;Password=homework-ago21;Max Pool Size=2");
-
-                connection.Open();
-
-                if (teste == "")
-                {
-                    teste = logRepository.TotalRegistros().ToString();
-                }
-
-                ViewData["Message"] = "Total de acessos: " + teste;
-
-                SqlCommand sql = new SqlCommand("INSERT tbLog VALUES ('about')", connection);
-                sql.ExecuteNonQuery();
-
-                return View();
+                teste = logRepository.TotalRegistros().ToString();
             }
+
+            ViewData["Message"] = "Total de acessos: " + teste;
+
+            logRepository.InserirLog("about");
+
+            return View();
         }
 
         public IActionResult Contact()
         {
             ViewData["Message"] = "Your contact page.";
 
-            using (SqlConnection conn1 = new SqlConnection("Server=martedb.database.windows.net;Database=sql7;User=app;Connection Timeout=3;Password=homework-ago21;Max Pool Size=2"))
-            {
-                conn1.Open();
+            logRepository.InserirLog("contact");
 
-                SqlCommand sql = new SqlCommand("INSERT tbLog VALUES ('contact')", conn1);
-                sql.ExecuteNonQuery();
-
-                return View();
-            }
+            return View();
         }
 
         public IActionResult Error()

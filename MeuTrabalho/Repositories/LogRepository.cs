@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using Dapper;
 
 namespace MeuTrabalho.Repositories
 {
-    public class LogRepository
+    public class LogRepository : ILogRepository
     {
         string _connectionString;
 
@@ -17,20 +18,20 @@ namespace MeuTrabalho.Repositories
 
         public int TotalRegistros()
         {
-            using (SqlConnection _connection = new SqlConnection(_connectionString))
+            using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                _connection.Open();
-
-                SqlCommand command = new SqlCommand("SELECT * FROM tbLog", _connection);
-
-                var reader = command.ExecuteReader();
-                int total = 0;
-                while (reader.Read())
-                {
-                    total = total + 1;
-                }
+                int total = connection.Query("SELECT count = COUNT(*) FROM tbLog").First().count;
 
                 return total;
+            }
+        }
+        public void InserirLog(string campo)
+        {
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            {
+                connection.Execute("prInserirLog", 
+                    new { p1 = campo }, 
+                    commandType: System.Data.CommandType.StoredProcedure);                
             }
         }
     }
