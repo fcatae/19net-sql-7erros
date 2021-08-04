@@ -29,9 +29,7 @@ namespace MeuTrabalho.Repositories
         {
             using (SqlConnection connection = new SqlConnection(_connectionString))
             {
-                connection.Execute("prInserirLog", 
-                    new { p1 = campo }, 
-                    commandType: System.Data.CommandType.StoredProcedure);                
+                connection.Execute("INSERT tbLog VALUES (@p1)", new { p1 = campo });                
             }
         }
     }
