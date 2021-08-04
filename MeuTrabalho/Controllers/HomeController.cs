@@ -12,18 +12,8 @@ namespace MeuTrabalho.Controllers
 {
     public class HomeController : Controller, IDisposable
     {
-        static SqlConnection _globalConnection = null;
-        readonly LogRepository logRepository;
-
         public HomeController()
         {
-            if(_globalConnection == null)
-            {
-                _globalConnection = new SqlConnection("Server=martedb.database.windows.net;Database=sql7;User=app;Password=homework-ago21;Max Pool Size=2");
-                _globalConnection.Open();
-            }
-
-            logRepository = new LogRepository(_globalConnection);
         }
 
         public IActionResult Index()
@@ -44,8 +34,12 @@ namespace MeuTrabalho.Controllers
 
         public IActionResult About([FromQuery]string teste = "")
         {
-            try
+            using (SqlConnection connection = new SqlConnection("Server=martedb.database.windows.net;Database=sql7;User=app;Connection Timeout=3;Password=homework-ago21;Max Pool Size=2"))
             {
+                LogRepository logRepository = new LogRepository("Server=martedb.database.windows.net;Database=sql7;User=app;Connection Timeout=3;Password=homework-ago21;Max Pool Size=2");
+
+                connection.Open();
+
                 if (teste == "")
                 {
                     teste = logRepository.TotalRegistros().ToString();
@@ -53,45 +47,26 @@ namespace MeuTrabalho.Controllers
 
                 ViewData["Message"] = "Total de acessos: " + teste;
 
-                SqlCommand sql = new SqlCommand("INSERT tbLog VALUES ('about')", _globalConnection);
-                var retorno = sql.ExecuteReader();   
-                
-                if( retorno == null )
-                {
-                    return RedirectToAction("RETORNO NULO");
-                }
-            }
-            catch(Exception ex)
-            {
-                ViewData["Message"] = "ERROR ABOUT";
-            }
+                SqlCommand sql = new SqlCommand("INSERT tbLog VALUES ('about')", connection);
+                sql.ExecuteNonQuery();
 
-            return View();
+                return View();
+            }
         }
 
         public IActionResult Contact()
         {
             ViewData["Message"] = "Your contact page.";
 
-            try
+            using (SqlConnection conn1 = new SqlConnection("Server=martedb.database.windows.net;Database=sql7;User=app;Connection Timeout=3;Password=homework-ago21;Max Pool Size=2"))
             {
-                SqlConnection conn1 = _globalConnection;
+                conn1.Open();
 
-                SqlCommand sql = new SqlCommand("INSERT tbLog VALUES ('contact')");
-                sql.Connection = conn1;
+                SqlCommand sql = new SqlCommand("INSERT tbLog VALUES ('contact')", conn1);
+                sql.ExecuteNonQuery();
 
-                sql.ExecuteScalar();
+                return View();
             }
-            catch(OutOfMemoryException ex)
-            {
-                return RedirectToAction("Error");
-            }
-            catch(Exception ex)
-            {
-                throw ex;
-            }
-
-            return View();
         }
 
         public IActionResult Error()

@@ -8,18 +8,20 @@ namespace MeuTrabalho.Repositories
 {
     public class LogRepository
     {
-        SqlConnection _connection;
+        string _connectionString;
 
-        public LogRepository(SqlConnection connection)
+        public LogRepository(string connectionString)
         {
-            this._connection = connection;
+            _connectionString = connectionString;
         }
 
         public int TotalRegistros()
         {
-            try
+            using (SqlConnection _connection = new SqlConnection(_connectionString))
             {
-                SqlCommand command = new SqlCommand("SELECT * FROM tbLog", this._connection);
+                _connection.Open();
+
+                SqlCommand command = new SqlCommand("SELECT * FROM tbLog", _connection);
 
                 var reader = command.ExecuteReader();
                 int total = 0;
@@ -28,13 +30,7 @@ namespace MeuTrabalho.Repositories
                     total = total + 1;
                 }
 
-                reader.Close();
-
                 return total;
-            }
-            catch(Exception ex)
-            {
-                throw ex;
             }
         }
     }
